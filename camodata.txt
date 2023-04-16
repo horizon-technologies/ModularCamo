@@ -1,0 +1,86 @@
+{
+	"digital2": {
+		"Glass": "0,0,0,72|models/shiny",
+		"Secondary": "56,41,48,255|sprops/textures/sprops_metal5",
+		"Primary": "54,59,53,255|sprops/textures/sprops_metal5",
+		"Wheel": "109,109,109,255|sprops/textures/sprops_metal5",
+		"Tertiary": "199,174,108,255|sprops/textures/sprops_metal5"
+	},
+	"reset": {
+		"Glass": "0,255,255,255|sprops/sprops_grid_orange_12x12",
+		"Secondary": "0,255,0,255|sprops/sprops_grid_orange_12x12",
+		"Primary": "255,0,0,255|sprops/sprops_grid_orange_12x12",
+		"Wheel": "255,93,0,255|sprops/sprops_grid_orange_12x12",
+		"Tertiary": "182,182,182,255|sprops/sprops_grid_orange_12x12"
+	},
+	"desert": {
+		"Glass": "0,0,0,72|models/shiny",
+		"Secondary": "253,242,201,255|models/props_debris/building_template010a",
+		"Primary": "253,242,201,255|models/props_debris/building_template010a",
+		"Wheel": "253,242,201,255|models/props_debris/building_template010a",
+		"Tertiary": "253,242,201,255|models/props_debris/building_template010a"
+	},
+	"police": {
+		"Glass": "0,63,255,255|models/props_combine/health_charger_glass",
+		"Secondary": "0,63,255,255|models/debug/debugwhite",
+		"Primary": "255,255,255,255|models/debug/debugwhite",
+		"Wheel": "72,72,72,255|models/debug/debugwhite",
+		"Tertiary": "72,72,72,255|models/debug/debugwhite"
+	},
+	"urban2": {
+		"Glass": "0,0,0,72|models/shiny",
+		"Secondary": "183,184,186,255|sprops/textures/sprops_metal5",
+		"Primary": "102,106,115,255|sprops/textures/sprops_metal5",
+		"Wheel": "109,109,109,255|sprops/textures/sprops_metal5",
+		"Tertiary": "203,204,206,255|sprops/textures/sprops_metal5"
+	},
+	"sprops": {
+		"Glass": "0,0,0,72|models/shiny",
+		"Secondary": "255,255,255,255|sprops/sprops_grid_12x12",
+		"Primary": "255,255,255,255|sprops/sprops_grid_12x12",
+		"Wheel": "255,255,255,255|sprops/sprops_grid_12x12",
+		"Tertiary": "255,255,255,255|sprops/sprops_grid_12x12"
+	},
+	"un": {
+		"Glass": "0,0,0,72|models/shiny",
+		"Secondary": "182,182,182,255|sprops/textures/sprops_metal5",
+		"Primary": "255,255,255,255|sprops/textures/sprops_metal5",
+		"Wheel": "109,109,109,255|sprops/textures/sprops_metal5",
+		"Tertiary": "0,0,0,255|sprops/textures/sprops_metal5"
+	},
+	"phx": {
+		"Glass": "255,255,255,255|hunter/myplastic",
+		"Secondary": "255,255,255,255|hunter/myplastic",
+		"Primary": "255,255,255,255|hunter/myplastic",
+		"Wheel": "255,255,255,255|hunter/myplastic",
+		"Tertiary": "255,255,255,255|hunter/myplastic"
+	},
+	"grass": {
+		"Glass": "0,0,0,72|models/shiny",
+		"Secondary": "255,255,255,255|phoenix_storms/ps_grass",
+		"Primary": "255,255,255,255|phoenix_storms/ps_grass",
+		"Wheel": "255,255,255,255|phoenix_storms/ps_grass",
+		"Tertiary": "255,255,255,255|phoenix_storms/ps_grass"
+	},
+	"urban1": {
+		"Glass": "0,0,0,72|models/shiny",
+		"Secondary": "91,71,64,255|sprops/textures/sprops_metal5",
+		"Primary": "128,144,157,255|sprops/textures/sprops_metal5",
+		"Wheel": "109,109,109,255|sprops/textures/sprops_metal5",
+		"Tertiary": "255,255,255,255|sprops/textures/sprops_metal5"
+	},
+	"digital1": {
+		"Glass": "0,0,0,72|models/shiny",
+		"Secondary": "42,59,40,255|sprops/textures/sprops_metal5",
+		"Primary": "86,115,51,255|sprops/textures/sprops_metal5",
+		"Wheel": "109,109,109,255|sprops/textures/sprops_metal5",
+		"Tertiary": "227,197,163,255|sprops/textures/sprops_metal5"
+	},
+	"snow": {
+		"Glass": "0,0,0,72|models/shiny",
+		"Secondary": "255,255,255,255|sprops/textures/sprops_metal5",
+		"Primary": "255,255,255,255|sprops/textures/sprops_metal5",
+		"Wheel": "255,255,255,255|sprops/textures/sprops_metal5",
+		"Tertiary": "255,255,255,255|sprops/textures/sprops_metal5"
+	}
+}

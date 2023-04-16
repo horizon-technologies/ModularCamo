@@ -1,0 +1,297 @@
+--@name Modular Camo Chip V2
+--@author
+--@shared
+
+--[[
+    Make sure to wire up the Base input
+
+    Camo Misc Commands
+    Use !camos to print all the available camos you can use
+    Use !camo <name> to set your tank to a given camo
+
+    Camo Modification Commands
+    Use !editcamo <name> to spawn props representing the provided camo or a "blank" slate if non exists
+    Use !savecamo <name> to save a the colors from the spawned props to your camodata file
+    Use !removecamo <name> to remove a camo from your camo data file
+    
+    For SaveCamo, ColorReadorder determines the order in which the template props will be read/saved
+    
+    NOTE: 
+    Some example camos should be found with the assosciated camodata.txt file. Two example digital camoflages 
+    were provided, but you will probably find better results using a dedicated texture pack like WTP or 
+    Barglab's materials.
+    - WTP: https://steamcommunity.com/sharedfiles/filedetails/?id=256056339 I think?
+    - Barglab's: https://steamcommunity.com/sharedfiles/filedetails/?id=2107380345 
+
+    Additionally, any updates and additional documentation may be found here:
+    https://github.com/horizon-technologies/ModularCamo
+]]--
+
+-- Settings =================================================================================================================
+local ColorTypes = { -- This defines how you should color your vehichle
+    Primary = Color(255,0,0),
+    Secondary = Color(0,255,0),
+    Tertiary = Color(0,0,255),
+    Glass = Color(93,0,255),
+    Wheel = Color(255,93,0)
+}
+
+local ColorReadOrder = {"Primary","Secondary","Tertiary","Glass","Wheel"} -- Read order of template props
+
+local dupeFinishTime = 3 -- The time after the dupe finishes spawning to scan the contraption
+
+local camoPath = "camodata.txt" -- The name of the file that stores all your camo data
+
+-- Don't edit under here ===================================================================================================
+
+-- Lookup table from string representation of a color to the name
+local TypesRev = {}
+for k,v in pairs(ColorTypes) do TypesRev[""..v] = k end
+
+local camo = class("modular_camo")
+do
+    function camo:initialize(options)
+        self.camoData = {}
+        for k, v in pairs(ColorTypes) do
+            -- If the camo doesn't have a color type specified, it will use the default color.
+            -- When making camos please specify each type
+            if options[k] ~= nil then self.camoData[k] = options[k] else self.camoData[k] = ColorTypes[k] end 
+        end
+    end
+
+    -- Get the color and material of a camo entry    
+    function camo:getCamoEntry(name)
+        local temp = self.camoData[name]
+        return temp[1], temp[2]
+    end
+
+    -- Convert a camo into a table of strings for writing to file (if we didn't do this json would look ugly)
+    function camo:toTable()
+        local outStr = {}
+        for k,v in pairs(self.camoData) do
+            local line = v[1].r..","..v[1].g..","..v[1].b..","..v[1].a.."|"..v[2]
+            outStr[k] = line
+        end
+        return outStr
+    end
+    
+    -- Convert a table of strings representing each color type to a camo object
+    function fromTable(tbl)
+        local result = {}
+        for k,v in pairs(tbl) do
+            if ColorTypes[k] ~= nil then
+                local temp = string.explode("|",v)
+                local temp2 = string.explode(",",temp[1])
+                local color = Color(tonumber(temp2[1]),tonumber(temp2[2]),tonumber(temp2[3]),tonumber(temp2[4]))
+                local model = temp[2]
+                result[k] = {color,model}
+            else
+                result[k] = v
+            end
+        end
+        return result
+    end
+end
+
+if SERVER then
+    wire.adjustPorts({Base="entity"},nil)
+
+    local Camos = {}
+    local Base = wire.ports.Base
+    local Template = {}
+
+    -- Stores entities and controllers by color type
+    function scan()
+        -- Initialize tables
+        local ents = Base:getAllConstrained()
+        local camoEnts = {}
+        local camoP2Ms = {}
+        for k,v in pairs(ColorTypes) do
+            camoEnts[k] = {}
+            camoP2Ms[k] = {}
+        end
+
+        -- Stores all p2m controller ents
+        p2mControllers = {}
+
+        -- Iterate through every entity and sort them by color
+        for k,v in pairs(ents) do
+            local key = ""..v:getColor()
+            local typeName = TypesRev[key]
+            if typeName ~= nil then
+                table.insert(camoEnts[typeName],v)
+            end
+
+            -- If its a p2m controller, add it to the list of p2m controllers
+            if v:getClass() == "sent_prop2mesh" then
+                table.insert(p2mControllers,v)
+            end
+        end
+
+        -- Iterate through every p2m controller and sort them and their index by color
+        for k,v in pairs(p2mControllers) do
+            for i = 1, v:p2mGetCount() do
+                local key = ""..v:p2mGetColor(i)
+                local typeName = TypesRev[key]
+                if typeName ~= nil then
+                    table.insert(camoP2Ms[typeName],{v,i})
+                end
+            end
+        end
+        print("[Camo] Finished Scanning Ents: "..#ents)
+        return camoEnts, camoP2Ms, ents
+    end
+
+    local camoEnts, camoP2Ms, Ents = scan()
+
+    function sendHint(msg,time)
+        net.start("Hint")
+        net.writeString(msg)
+        net.writeFloat(time)
+        net.send()
+    end
+
+    hook.add("PlayerSay", "chatcmd", function(ply, text)
+        if ply == owner() then
+            local Said = string.explode(" ",text)
+            local Command = Said[1]
+            table.remove(Said,1)
+            local Config = Said
+            if Command == "!camo" then -- Camo application function
+                local curCamo = Camos[Config[1]]
+                if curCamo ~= nil then
+                    for type, _ in pairs(ColorTypes) do
+                        -- Set color of respective entities
+                        local col, mat = curCamo:getCamoEntry(type)
+                        for _,ent in pairs(camoEnts[type]) do
+                            ent:setColor(col)
+                            ent:setMaterial(mat)
+                        end
+
+                        -- Set color of respective p2m controllers
+                        for _,data in pairs(camoP2Ms[type]) do
+                            local controller, index = data[1], data[2]
+                            controller:p2mSetColor(index,col)
+                            controller:p2mSetMaterial(index,mat)
+                        end
+                    end
+                    sendHint("Camo: "..Config[1],2)
+                else
+                    sendHint("Invalid camo name",2)
+                end
+                return ""
+            elseif Command == "!camos" then
+                print("Camo List:")
+                local outStr = ""
+                for k,v in ipairs(table.getKeys(Camos)) do
+                    outStr = outStr .. v .. " "
+                end
+                print(outStr)
+                return ""
+            elseif Command == "!editcamo" then
+                local name = Config[1]
+                local i = 0
+                local tr = owner():getEyeTrace()
+                
+                for k,v in ipairs(Template) do
+                    v:breakEnt()
+                end
+                Template = {}
+                timer.create("template",0.1,0,function()
+                    -- Spawn out the template props according to the inputted camo
+                    if i < #ColorReadOrder then
+                        local aimpos = tr.HitPos
+                        local aimang = (tr.StartPos - tr.HitPos):getAngle()
+                        Template[i+1] = prop.create(aimpos - aimang:getRight()*i*12, aimang, "models/sprops/cuboids/height12/size_1/cube_12x12x12.mdl", true)
+                        
+                        if Camos[name] ~= nil then
+                            local col, mat = Camos[name]:getCamoEntry(ColorReadOrder[i+1])
+                            Template[i+1]:setColor(col)
+                            Template[i+1]:setMaterial(mat)
+                        else        
+                            Template[i+1]:setColor(ColorTypes[ColorReadOrder[i+1]])
+                        end
+                        i = i + 1
+                    else
+                        timer.remove("template")
+                    end
+                end)
+                print("Template loaded: "..name)
+                return ""
+            elseif Command == "!savecamo" then
+                local options = {}
+                local name = Config[1]
+                for k,v in pairs(Template) do
+                    options[ColorReadOrder[k]] = {v:getColor(),v:getMaterial()}
+                    v:breakEnt()
+                end
+                Template = {}
+                local temp = camo:new(options)
+                Camos[name] = temp
+                saveCamos()
+                print("Template saved: "..name)
+                return ""
+            elseif Command == "!removecamo" then
+                local name = Config[1]
+                if Camos[name] == nil then print("Camo doesn't exist: "..name) return end
+                saveCamos()
+                print("Camo removed: "..name)
+                return ""
+            end
+        end
+    end)
+
+    function saveCamos()
+        local result = {}
+        for k,v in pairs(Camos) do
+            result[k] = v:toTable()
+        end
+        net.start("SaveToFile") net.writeString(json.encode(result,true)) net.send()
+    end
+
+    hook.add("DupeFinished","",function(x)
+        timer.simple(dupeFinishTime,function() -- I don't like this but some entities only finish initializing some time after dupefinish is called.
+            camoEnts, camoP2Ms, Ents = scan()
+        end)
+    end)
+
+    net.receive("UploadCamos",function() -- Create camos from client transmitted table
+        local temp = net.readTable()
+        for k,v in pairs(temp) do
+            Camos[k] = camo:new(v)
+        end
+    end)
+
+elseif CLIENT then
+
+    if player() ~= owner() then return end
+    -- receiving hints
+    net.receive("Hint",function()
+        local msg = net.readString()
+        local time = net.readFloat()
+        notification.addLegacy(msg, NOTIFY.GENERIC, time)
+    end)
+
+    net.receive("SaveToFile", function() -- Saves a camo to file
+        local str = net.readString()
+        file.write(camoPath,str)
+        print("Camo file written to: "..camoPath)
+    end)
+
+    function loadCamos(str) -- Parse camo entries into an option table to initialize camos with
+        local result = {}
+        local tbl = json.decode(str)
+        for k,v in pairs(tbl) do
+            result[k] = fromTable(v)
+        end
+        return result
+    end
+
+    function uploadCamos(tbl) -- Upload camos
+        net.start("UploadCamos")
+        net.writeTable(tbl)
+        net.send()
+    end
+
+    uploadCamos(loadCamos(file.read(camoPath))) -- Load camos from file and upload them
+end
